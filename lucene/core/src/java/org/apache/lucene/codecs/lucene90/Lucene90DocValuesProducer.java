@@ -1481,7 +1481,7 @@ final class Lucene90DocValuesProducer extends DocValuesProducer {
     final RandomAccessInput rankSlice;
     final NumericEntry entry;
     final int shift;
-    final long mul;
+    long mul;
     final int mask;
 
     long block = -1;
@@ -1499,7 +1499,6 @@ final class Lucene90DocValuesProducer extends DocValuesProducer {
               : data.randomAccessSlice(
                   entry.valueJumpTableOffset, data.length() - entry.valueJumpTableOffset);
       shift = entry.blockShift;
-      mul = entry.gcd;
       mask = (1 << shift) - 1;
     }
 
@@ -1521,6 +1520,8 @@ final class Lucene90DocValuesProducer extends DocValuesProducer {
           if (bitsPerValue == 0) {
             blockEndOffset = offset;
           } else {
+            mul = slice.readLong(offset);
+            offset += Long.BYTES;
             final int length = slice.readInt(offset);
             offset += Integer.BYTES;
             blockEndOffset = offset + length;

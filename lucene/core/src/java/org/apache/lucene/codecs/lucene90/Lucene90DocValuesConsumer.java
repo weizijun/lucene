@@ -162,15 +162,15 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
     }
 
     /** Update the required space. */
-    void finish() {
+    void finish(long gcd) {
       if (max > min) {
-        spaceInBits += DirectWriter.unsignedBitsRequired(max - min) * numValues;
+        spaceInBits += DirectWriter.unsignedBitsRequired((max - min) / gcd) * numValues;
       }
     }
 
     /** Update space usage and get ready for accumulating values for the next block. */
-    void nextBlock() {
-      finish();
+    void nextBlock(long gcd) {
+      finish(gcd);
       reset();
     }
   }
@@ -181,6 +181,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
     MinMaxTracker minMax = new MinMaxTracker();
     MinMaxTracker blockMinMax = new MinMaxTracker();
     long gcd = 0;
+    long blockGcd = 0;
     Set<Long> uniqueValues = new HashSet<>();
     for (int doc = values.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = values.nextDoc()) {
       for (int i = 0, count = values.docValueCount(); i < count; ++i) {
@@ -197,10 +198,19 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
           }
         }
 
+        if (blockGcd != 1) {
+          if (v < Long.MIN_VALUE / 2 || v > Long.MAX_VALUE / 2) {
+            blockGcd = 1;
+          } else if (minMax.numValues != 0) {
+            blockGcd = MathUtil.gcd(blockGcd, v - blockMinMax.min);
+          }
+        }
+
         minMax.update(v);
         blockMinMax.update(v);
         if (blockMinMax.numValues == NUMERIC_BLOCK_SIZE) {
-          blockMinMax.nextBlock();
+          blockMinMax.nextBlock(blockGcd);
+          blockGcd = 0;
         }
 
         if (uniqueValues != null && uniqueValues.add(v) && uniqueValues.size() > 256) {
@@ -211,8 +221,8 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
       numDocsWithValue++;
     }
 
-    minMax.finish();
-    blockMinMax.finish();
+    minMax.finish(gcd);
+    blockMinMax.finish(blockGcd);
 
     final long numValues = minMax.numValues;
     long min = minMax.min;
@@ -293,7 +303,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
     meta.writeLong(startOffset); // valueOffset
     long jumpTableOffset = -1;
     if (doBlocks) {
-      jumpTableOffset = writeValuesMultipleBlocks(valuesProducer.getSortedNumeric(field), gcd);
+      jumpTableOffset = writeValuesMultipleBlocks(valuesProducer.getSortedNumeric(field));
     } else if (numBitsPerValue != 0) {
       writeValuesSingleBlock(
           valuesProducer.getSortedNumeric(field), numValues, numBitsPerValue, min, gcd, encode);
@@ -326,7 +336,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
   }
 
   // Returns the offset to the jump-table for vBPV
-  private long writeValuesMultipleBlocks(SortedNumericDocValues values, long gcd)
+  private long writeValuesMultipleBlocks(SortedNumericDocValues values)
       throws IOException {
     long[] offsets = new long[ArrayUtil.oversize(1, Long.BYTES)];
     int offsetsIndex = 0;
@@ -339,7 +349,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
         if (upTo == NUMERIC_BLOCK_SIZE) {
           offsets = ArrayUtil.grow(offsets, offsetsIndex + 1);
           offsets[offsetsIndex++] = data.getFilePointer();
-          writeBlock(buffer, NUMERIC_BLOCK_SIZE, gcd, encodeBuffer);
+          writeBlock(buffer, NUMERIC_BLOCK_SIZE, encodeBuffer);
           upTo = 0;
         }
       }
@@ -347,7 +357,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
     if (upTo > 0) {
       offsets = ArrayUtil.grow(offsets, offsetsIndex + 1);
       offsets[offsetsIndex++] = data.getFilePointer();
-      writeBlock(buffer, upTo, gcd, encodeBuffer);
+      writeBlock(buffer, upTo, encodeBuffer);
     }
 
     // All blocks has been written. Flush the offset jump-table
@@ -359,16 +369,24 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
     return offsetsOrigo;
   }
 
-  private void writeBlock(long[] values, int length, long gcd, ByteBuffersDataOutput buffer)
+  private void writeBlock(long[] values, int length, ByteBuffersDataOutput buffer)
       throws IOException {
     assert length > 0;
     long min = values[0];
     long max = values[0];
+    long gcd = 0;
     for (int i = 1; i < length; ++i) {
       final long v = values[i];
       assert Math.floorMod(values[i] - min, gcd) == 0;
       min = Math.min(min, v);
       max = Math.max(max, v);
+      if (gcd != 1) {
+        if (v < Long.MIN_VALUE / 2 || v > Long.MAX_VALUE / 2) {
+          gcd = 1;
+        } else {
+          gcd = MathUtil.gcd(gcd, v - min);
+        }
+      }
     }
     if (min == max) {
       data.writeByte((byte) 0);
@@ -384,6 +402,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
       w.finish();
       data.writeByte((byte) bitsPerValue);
       data.writeLong(min);
+      data.writeLong(gcd);
       data.writeInt(Math.toIntExact(buffer.size()));
       buffer.copyTo(data);
     }
