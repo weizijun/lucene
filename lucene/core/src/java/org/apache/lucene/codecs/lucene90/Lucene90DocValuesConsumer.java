@@ -179,31 +179,35 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
               1L + ((numValues - 1) >>> NUMERIC_BLOCK_SHIFT),
               DIRECT_MONOTONIC_BLOCK_SHIFT);
 
-      final long[] buffer = new long[NUMERIC_BLOCK_SIZE];
       int bufferSize = 0;
 
       final long valuesDataOffset = data.getFilePointer();
 
-      final DocValuesEncoder encoder = new DocValuesEncoder();
+      // TODO select a encoder
+      //final DocValuesEncoder encoder = new DocValuesEncoder();
+      final BaseEncoder encoder = new LZ4DocValuesEncoder();
       values = valuesProducer.getSortedNumeric(field);
       for (int doc = values.nextDoc();
           doc != DocIdSetIterator.NO_MORE_DOCS;
           doc = values.nextDoc()) {
         final int count = values.docValueCount();
         for (int i = 0; i < count; ++i) {
-          buffer[bufferSize++] = values.nextValue();
+          encoder.add(bufferSize++, values.nextValue());
           if (bufferSize == NUMERIC_BLOCK_SIZE) {
             indexWriter.add(data.getFilePointer() - valuesDataOffset);
-            encoder.encode(buffer, data);
+            encoder.encode(data);
             bufferSize = 0;
           }
         }
       }
+      encoder.encode(data);
+
       if (bufferSize > 0) {
+        while (bufferSize < NUMERIC_BLOCK_SIZE) {
+          encoder.add(bufferSize++, 0);
+        }
         indexWriter.add(data.getFilePointer() - valuesDataOffset);
-        // Fill unused slots in the block with zeroes rather than junk
-        Arrays.fill(buffer, bufferSize, NUMERIC_BLOCK_SIZE, 0L);
-        encoder.encode(buffer, data);
+        encoder.encode(data);
       }
 
       final long valuesDataLength = data.getFilePointer() - valuesDataOffset;

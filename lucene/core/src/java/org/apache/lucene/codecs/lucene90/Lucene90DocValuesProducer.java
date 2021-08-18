@@ -435,9 +435,10 @@ final class Lucene90DocValuesProducer extends DocValuesProducer {
     final IndexInput valuesData = data.slice("values", entry.valuesOffset, entry.valuesLength);
     return new NumericValues() {
 
-      private final DocValuesEncoder decoder = new DocValuesEncoder();
+      // TODO select a encoder
+      // private final DocValuesEncoder decoder = new DocValuesEncoder();
+      private final BaseEncoder decoder = new LZ4DocValuesEncoder();
       private long currentBlockIndex = -1;
-      private final long[] currentBlock = new long[NUMERIC_BLOCK_SIZE];
 
       @Override
       long advance(long index) throws IOException {
@@ -449,9 +450,9 @@ final class Lucene90DocValuesProducer extends DocValuesProducer {
             valuesData.seek(indexReader.get(blockIndex));
           }
           currentBlockIndex = blockIndex;
-          decoder.decode(valuesData, currentBlock);
+          decoder.decode(valuesData);
         }
-        return currentBlock[blockInIndex];
+        return decoder.get(blockInIndex);
       }
     };
   }

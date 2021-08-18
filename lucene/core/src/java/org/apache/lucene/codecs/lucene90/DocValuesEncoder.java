@@ -27,7 +27,7 @@ import org.apache.lucene.util.packed.PackedInts;
  * Encoder for blocks of doc values. This automatically detects whether values are monotonic or have
  * a common divisor to decide on a good compression strategy.
  */
-final class DocValuesEncoder {
+final class DocValuesEncoder implements BaseEncoder {
 
   static final int BLOCK_SIZE = Lucene90DocValuesFormat.NUMERIC_BLOCK_SIZE;
 
@@ -209,5 +209,29 @@ final class DocValuesEncoder {
     for (int i = 1; i < BLOCK_SIZE; ++i) {
       arr[i] += arr[i - 1];
     }
+  }
+
+  private final long[] buffer = new long[BLOCK_SIZE];
+
+  @Override
+  public void add(int index, long value) {
+    assert index < BLOCK_SIZE;
+    buffer[index] = value;
+  }
+
+  @Override
+  public void encode(DataOutput out) throws IOException {
+    encode(buffer, out);
+  }
+
+  @Override
+  public long get(int index) {
+    assert index < BLOCK_SIZE;
+    return buffer[index];
+  }
+
+  @Override
+  public void decode(DataInput in) throws IOException {
+    decode(in, buffer);
   }
 }
