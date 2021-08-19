@@ -21,10 +21,6 @@ import org.apache.lucene.store.DataOutput;
 
 import java.io.IOException;
 
-/**
- * @author weizijun.wzj
- * @date 2021/8/18
- */
 public interface BaseEncoder {
     void add(int index, long value);
 
