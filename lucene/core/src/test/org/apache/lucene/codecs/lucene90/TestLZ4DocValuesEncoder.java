@@ -16,44 +16,42 @@
  */
 package org.apache.lucene.codecs.lucene90;
 
-
+import java.io.IOException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.LuceneTestCase;
 
-import java.io.IOException;
-
 public class TestLZ4DocValuesEncoder extends LuceneTestCase {
-    public void testRandomValues() throws IOException {
-        long[] arr = new long[LZ4DocValuesEncoder.BLOCK_SIZE];
-        for (int i = 0; i < LZ4DocValuesEncoder.BLOCK_SIZE; ++i) {
-            arr[i] = random().nextLong();
-        }
-        doTest(arr);
+  public void testRandomValues() throws IOException {
+    long[] arr = new long[LZ4DocValuesEncoder.BLOCK_SIZE];
+    for (int i = 0; i < LZ4DocValuesEncoder.BLOCK_SIZE; ++i) {
+      arr[i] = random().nextLong();
     }
+    doTest(arr);
+  }
 
-    private void doTest(long[] arr) throws IOException {
-        final long[] expected = arr.clone();
-        LZ4DocValuesEncoder encoder = new LZ4DocValuesEncoder();
+  private void doTest(long[] arr) throws IOException {
+    final long[] expected = arr.clone();
+    LZ4DocValuesEncoder encoder = new LZ4DocValuesEncoder();
+    for (int i = 0; i < expected.length; i++) {
+      encoder.add(i, expected[i]);
+    }
+    try (Directory dir = newDirectory()) {
+      try (IndexOutput out = dir.createOutput("tests.bin", IOContext.DEFAULT)) {
+        encoder.encode(out);
+      }
+      try (IndexInput in = dir.openInput("tests.bin", IOContext.DEFAULT)) {
+        encoder.decode(in);
+        assertEquals(in.length(), in.getFilePointer());
+
+        long[] decoded = new long[expected.length];
         for (int i = 0; i < expected.length; i++) {
-            encoder.add(i, expected[i]);
+          decoded[i] = encoder.get(i);
         }
-        try (Directory dir = newDirectory()) {
-            try (IndexOutput out = dir.createOutput("tests.bin", IOContext.DEFAULT)) {
-                encoder.encode(out);
-            }
-            try (IndexInput in = dir.openInput("tests.bin", IOContext.DEFAULT)) {
-                encoder.decode(in);
-                assertEquals(in.length(), in.getFilePointer());
-
-                long[] decoded = new long[expected.length];
-                for (int i = 0; i < expected.length; i++) {
-                    decoded[i] = encoder.get(i);
-                }
-                assertArrayEquals(expected, decoded);
-            }
-        }
+        assertArrayEquals(expected, decoded);
+      }
     }
+  }
 }

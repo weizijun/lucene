@@ -16,40 +16,41 @@
  */
 package org.apache.lucene.codecs.lucene90;
 
+import java.io.IOException;
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 
-import java.io.IOException;
-
-/**
- * doc values block encoder
- */
+/** doc values block encoder */
 public interface BaseEncoder {
-    /**
-     * add a value
-     * @param index the value's index
-     * @param value the value
-     */
-    void add(int index, long value);
+  /**
+   * add a value
+   *
+   * @param index the value's index
+   * @param value the value
+   */
+  void add(int index, long value);
 
-    /**
-     * encode buffer data to output
-     * @param out data output
-     * @throws IOException if io exception
-     */
-    void encode(DataOutput out) throws IOException;
+  /**
+   * encode buffer data to output
+   *
+   * @param out data output
+   * @throws IOException if io exception
+   */
+  void encode(DataOutput out) throws IOException;
 
-    /**
-     * get a value
-     * @param index the value's index
-     * @return the value of index
-     */
-    long get(int index);
+  /**
+   * get a value
+   *
+   * @param index the value's index
+   * @return the value of index
+   */
+  long get(int index);
 
-    /**
-     * decode input data to buffer
-     * @param in data input
-     * @throws IOException if io exception
-     */
-    void decode(DataInput in) throws IOException;
+  /**
+   * decode input data to buffer
+   *
+   * @param in data input
+   * @throws IOException if io exception
+   */
+  void decode(DataInput in) throws IOException;
 }

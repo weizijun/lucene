@@ -183,7 +183,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
       final long valuesDataOffset = data.getFilePointer();
 
       // TODO select a encoder
-      //final DocValuesEncoder encoder = new DocValuesEncoder();
+      // final DocValuesEncoder encoder = new DocValuesEncoder();
       final BaseEncoder encoder = new LZ4DocValuesEncoder();
       values = valuesProducer.getSortedNumeric(field);
       for (int doc = values.nextDoc();
