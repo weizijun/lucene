@@ -27,8 +27,8 @@ import java.io.IOException;
 public interface BaseEncoder {
     /**
      * add a value
-     * @param index
-     * @param value
+     * @param index the value's index
+     * @param value the value
      */
     void add(int index, long value);
 
