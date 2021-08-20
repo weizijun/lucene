@@ -23,18 +23,23 @@ import org.apache.lucene.util.compress.LZ4;
 import java.io.IOException;
 
 /**
- * Compressed blocks of doc values.
+ * first use delta encode, then compressed.
  */
-public class LZ4DocValuesEncoder implements BaseEncoder {
+public class DeltaLZ4DocValuesEncoder implements BaseEncoder {
 
     static final int BLOCK_SIZE = Lucene90DocValuesFormat.NUMERIC_BLOCK_SIZE;
     private LZ4.FastCompressionHashTable ht = new LZ4.FastCompressionHashTable();
 
     private final byte[] buffer = new byte[BLOCK_SIZE * Long.BYTES];
+    private final long[] longs = new long[BLOCK_SIZE];
 
     @Override
     public void add(int index, long value) {
         assert index < BLOCK_SIZE;
+        longs[index] = value;
+    }
+
+    private void writeLong(int index, long value) {
         int pos = index * Long.BYTES;
         writeInt(pos, (int) (value >> 32));
         writeInt(pos + 4, (int) value);
@@ -49,11 +54,20 @@ public class LZ4DocValuesEncoder implements BaseEncoder {
 
     @Override
     public void encode(DataOutput out) throws IOException {
+        long preValue = 0;
+        for (int i = 0; i < longs.length; ++i) {
+            writeLong(i, longs[i] - preValue);
+            preValue = longs[i];
+        }
         LZ4.compress(buffer, 0, buffer.length, out, ht);
     }
 
     @Override
     public long get(int index) {
+        return longs[index];
+    }
+
+    private long readLong(int index) {
         int id = index * Long.BYTES;
         final int i1 = ((buffer[id] & 0xff) << 24) | ((buffer[id + 1] & 0xff) << 16) | ((buffer[id + 2]
                 & 0xff) << 8) | (buffer[id + 3] & 0xff);
@@ -65,5 +79,11 @@ public class LZ4DocValuesEncoder implements BaseEncoder {
     @Override
     public void decode(DataInput in) throws IOException {
         LZ4.decompress(in, buffer.length, buffer, 0);
+        long preValue = 0;
+        for (int i = 0; i < buffer.length / Long.BYTES; i++) {
+            long value = readLong(i) + preValue;
+            longs[i] = value;
+            preValue = value;
+        }
     }
 }
