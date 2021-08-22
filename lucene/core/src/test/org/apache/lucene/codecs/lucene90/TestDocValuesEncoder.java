@@ -143,6 +143,27 @@ public class TestDocValuesEncoder extends LuceneTestCase {
     doTest(arr, expectedNumBytes);
   }
 
+  public void testTimeSeries() throws IOException {
+    long[] arr = new long[DocValuesEncoder.BLOCK_SIZE];
+    for (int i = 0; i < DocValuesEncoder.BLOCK_SIZE / 4; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(1.1);
+    }
+
+    for (int i = DocValuesEncoder.BLOCK_SIZE / 4; i < DocValuesEncoder.BLOCK_SIZE / 2; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(2.2);
+    }
+
+    for (int i = DocValuesEncoder.BLOCK_SIZE / 2; i < 3 * DocValuesEncoder.BLOCK_SIZE / 4; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(3.3);
+    }
+
+    for (int i = 3 * DocValuesEncoder.BLOCK_SIZE / 4; i < DocValuesEncoder.BLOCK_SIZE; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(4.4);
+    }
+    final long expectedNumBytes = 1036;
+    doTest(arr, expectedNumBytes);
+  }
+
   private void doTest(long[] arr, long expectedNumBytes) throws IOException {
     final long[] expected = arr.clone();
     DocValuesEncoder encoder = new DocValuesEncoder();

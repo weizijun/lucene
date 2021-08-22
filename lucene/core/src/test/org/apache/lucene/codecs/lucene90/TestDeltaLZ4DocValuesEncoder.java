@@ -22,6 +22,7 @@ import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.LuceneTestCase;
+import org.apache.lucene.util.NumericUtils;
 
 public class TestDeltaLZ4DocValuesEncoder extends LuceneTestCase {
   public void testRandomValues() throws IOException {
@@ -59,6 +60,27 @@ public class TestDeltaLZ4DocValuesEncoder extends LuceneTestCase {
       arr[i] = 1000 - 30 * i;
     }
     long expectedNumBytes = 28;
+    doTest(arr, expectedNumBytes);
+  }
+
+  public void testTimeSeries() throws IOException {
+    long[] arr = new long[DocValuesEncoder.BLOCK_SIZE];
+    for (int i = 0; i < DocValuesEncoder.BLOCK_SIZE / 4; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(1.1);
+    }
+
+    for (int i = DocValuesEncoder.BLOCK_SIZE / 4; i < DocValuesEncoder.BLOCK_SIZE / 2; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(2.2);
+    }
+
+    for (int i = DocValuesEncoder.BLOCK_SIZE / 2; i < 3 * DocValuesEncoder.BLOCK_SIZE / 4; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(3.3);
+    }
+
+    for (int i = 3 * DocValuesEncoder.BLOCK_SIZE / 4; i < DocValuesEncoder.BLOCK_SIZE; i++) {
+      arr[i] = NumericUtils.doubleToSortableLong(4.4);
+    }
+    final long expectedNumBytes = 49;
     doTest(arr, expectedNumBytes);
   }
 
