@@ -184,7 +184,7 @@ final class Lucene90DocValuesConsumer extends DocValuesConsumer {
 
       // TODO select a encoder
       // final DocValuesEncoder encoder = new DocValuesEncoder();
-      final BaseEncoder encoder = new LZ4DocValuesEncoder();
+      final BaseEncoder encoder = new ZstdDocValuesEncoder();
       values = valuesProducer.getSortedNumeric(field);
       for (int doc = values.nextDoc();
           doc != DocIdSetIterator.NO_MORE_DOCS;

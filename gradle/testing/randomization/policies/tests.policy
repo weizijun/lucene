@@ -97,6 +97,8 @@ grant {
   permission java.io.FilePermission "${hunspell.corpora}${/}-", "read";
   permission java.io.FilePermission "${hunspell.dictionaries}", "read";
   permission java.io.FilePermission "${hunspell.dictionaries}${/}-", "read";
+
+  permission java.lang.RuntimePermission "loadLibrary.*";
 };
 
 // Permissions to support ant build

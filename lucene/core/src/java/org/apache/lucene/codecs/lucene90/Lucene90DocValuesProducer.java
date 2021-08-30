@@ -436,7 +436,7 @@ final class Lucene90DocValuesProducer extends DocValuesProducer {
 
       // TODO select a encoder
       // private final DocValuesEncoder decoder = new DocValuesEncoder();
-      private final BaseEncoder decoder = new LZ4DocValuesEncoder();
+      private final BaseEncoder decoder = new ZstdDocValuesEncoder();
       private long currentBlockIndex = -1;
 
       @Override

@@ -20,6 +20,7 @@ apply plugin: 'java-library'
 description = 'Lucene core library'
 
 dependencies {
+  implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.4.9-5'
   testImplementation project(':lucene:codecs')
   testImplementation project(':lucene:test-framework')
 }
