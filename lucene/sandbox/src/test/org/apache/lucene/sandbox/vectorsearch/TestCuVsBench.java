@@ -105,8 +105,7 @@ public class TestCuVsBench extends LuceneTestCase {
 
         for (IndexWriter writer : new IndexWriter[] { cuvsIndexWriter, hnswIndexWriter }) {
             Codec codec = writer.getConfig().getCodec();
-            String codecName = codec.getClass().getSimpleName().isEmpty() ? codec.getClass().getSuperclass().getSimpleName()
-                    : codec.getClass().getSimpleName();
+            String codecName = codec.knnVectorsFormat() instanceof CuVSVectorsFormat ? "CuVS" : "HNSW";
             log.info("----------\nIndexing documents using "+codecName+" ..."); // error for different coloring
             long indexStartTime = System.currentTimeMillis();
             indexDocuments(writer, config, titles, vectorColumn, config.commitFreq);
@@ -120,7 +119,7 @@ public class TestCuVsBench extends LuceneTestCase {
             log.info("Time taken for index building (end to end): " + indexTimeTaken + " ms");
 
             log.info("Querying documents using "+codecName+"..." ); // error for different coloring
-            query(writer.getDirectory(), config, codec instanceof CuVSCodec, metrics, queryResults);
+            query(writer.getDirectory(), config, codec.knnVectorsFormat() instanceof CuVSVectorsFormat, metrics, queryResults);
         }
 
         // writeCSV(queryResults, "neighbors.csv");
