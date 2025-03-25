@@ -104,14 +104,15 @@ public class TestCuVsBench extends LuceneTestCase {
         IndexWriter hnswIndexWriter = new IndexWriter(new ByteBuffersDirectory(), hnswWriterConfig);
         IndexWriter cuvsIndexWriter = new IndexWriter(new ByteBuffersDirectory(), cuvsIndexWriterConfig);
 
+
+        int num = 0;
         for (IndexWriter writer : new IndexWriter[] { cuvsIndexWriter, hnswIndexWriter }) {
-            Codec codec = writer.getConfig().getCodec();
-            String codecName = codec.equals(cuvsCodec) ? "CuVS" : "HNSW";
+            String codecName = num == 0 ? "CuVS" : "HNSW";
             log.info("----------\nIndexing documents using "+codecName+" ..."); // error for different coloring
             long indexStartTime = System.currentTimeMillis();
             indexDocuments(writer, config, titles, vectorColumn, config.commitFreq);
             long indexTimeTaken = System.currentTimeMillis() - indexStartTime;
-            if (codec.equals(cuvsCodec)) {
+            if (num == 0) {
                 metrics.put("cuvs-indexing-time", indexTimeTaken);
             } else {
                 metrics.put("hnsw-indexing-time", indexTimeTaken);
@@ -120,7 +121,8 @@ public class TestCuVsBench extends LuceneTestCase {
             log.info("Time taken for index building (end to end): " + indexTimeTaken + " ms");
 
             log.info("Querying documents using "+codecName+"..." ); // error for different coloring
-            query(writer.getDirectory(), config, codec.equals(cuvsCodec), metrics, queryResults);
+            query(writer.getDirectory(), config, num == 0, metrics, queryResults);
+            num++;
         }
 
         // writeCSV(queryResults, "neighbors.csv");
