@@ -216,6 +216,8 @@ allprojects {
             return configurations.secManagerExclusions.resolve().find { it.name.startsWith("junit-") }.absolutePath
           })
           securityArgumentProvider.otherProperties.put("lucene.test.framework", project(":lucene:test-framework").layout.buildDirectory.get().asFile.absolutePath)
+
+          securityArgumentProvider.otherProperties.put("lucene.sandbox", project(":lucene:sandbox").layout.buildDirectory.get().asFile.absolutePath)
         }
 
         doFirst {
