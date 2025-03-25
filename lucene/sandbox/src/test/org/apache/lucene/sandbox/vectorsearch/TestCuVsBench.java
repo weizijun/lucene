@@ -123,11 +123,11 @@ public class TestCuVsBench extends LuceneTestCase {
             query(writer.getDirectory(), config, codec instanceof CuVSCodec, metrics, queryResults);
         }
 
-        writeCSV(queryResults, "neighbors.csv");
+        // writeCSV(queryResults, "neighbors.csv");
         System.out.println("queryResults: " + queryResults);
         String resultsJson = new ObjectMapper().writerWithDefaultPrettyPrinter()
                 .writeValueAsString(Map.of("configuration", config, "metrics", metrics));
-        FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
+        // FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
         System.out.println(resultsJson);
 
         log.info("\n-----\nOverall metrics: " + metrics + "\nMetrics: \n" + resultsJson + "\n-----");
@@ -322,11 +322,18 @@ public class TestCuVsBench extends LuceneTestCase {
 
         @Override
         public String toString() {
-            try {
-                return new ObjectMapper().writeValueAsString(this);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Problem with converting the result to a string", e);
-            }
+//            try {
+//                return new ObjectMapper().writeValueAsString(this);
+//            } catch (JsonProcessingException e) {
+//                throw new RuntimeException("Problem with converting the result to a string", e);
+//            }
+            return "QueryResult{" +
+                    "codec='" + codec + '\'' +
+                    ", queryId=" + queryId +
+                    ", docs=" + docs +
+                    ", scores=" + scores +
+                    ", latencyMs=" + latencyMs +
+                    '}';
         }
     }
 
