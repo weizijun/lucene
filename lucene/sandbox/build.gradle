@@ -31,4 +31,7 @@ dependencies {
   moduleTestImplementation project(':lucene:test-framework')
   moduleImplementation deps.commons.lang3
   moduleImplementation deps.cuvs
+  moduleImplementation deps.jackson
+  moduleImplementation deps.opencsv
+  moduleImplementation deps.commonio
 }
