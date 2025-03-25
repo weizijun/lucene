@@ -124,11 +124,10 @@ public class TestCuVsBench extends LuceneTestCase {
         }
 
         // writeCSV(queryResults, "neighbors.csv");
-        System.out.println("queryResults: " + queryResults);
+        log.info("queryResults: " + queryResults);
 //        String resultsJson = new ObjectMapper().writerWithDefaultPrettyPrinter()
 //                .writeValueAsString(Map.of("configuration", config, "metrics", metrics));
         // FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
-        System.out.println(metrics);
 
         log.info("\n-----\nOverall metrics: " + metrics + "\nMetrics: \n" + metrics + "\n-----");
 
