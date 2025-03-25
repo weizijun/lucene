@@ -83,7 +83,7 @@ grant {
 
   // TODO: these are just temporary to allow tesing with cuvs-java
   permission java.lang.RuntimePermission "getenv.CUVS_JAVA_SO_PATH";
-  permission java.io.FilePermission "${/}-", "read";
+  permission java.io.FilePermission "${/}-", "read,write";
   // For temporary files to communicate with cuvs
   permission java.io.FilePermission "${/}tmp${/}-", "write,delete";
 
