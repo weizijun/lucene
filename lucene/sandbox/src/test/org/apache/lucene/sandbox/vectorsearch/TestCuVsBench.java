@@ -67,8 +67,8 @@ public class TestCuVsBench extends LuceneTestCase {
     private static boolean RESULTS_DEBUGGING = false; // when enabled, titles are indexed and printed after search
 
     public void testBench() throws Exception {
-        String[] args = new String[]{"vector_database_wikipedia_articles_embedded.csv", "4", "article_vector", "10", "768",
-                "query.txt", "300000", "10", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
+        String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "25000", "article_vector", "10", "768",
+                "/home/admin/local/lucene/query.txt", "300000", "10", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
         };
         BenchmarkConfiguration config = new BenchmarkConfiguration(args);
         Map<String, Object> metrics = new HashMap<String, Object>();
@@ -91,7 +91,7 @@ public class TestCuVsBench extends LuceneTestCase {
         hnswWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 
         // CuVS Writer:
-        IndexWriterConfig cuvsIndexWriterConfig = new IndexWriterConfig(new StandardAnalyzer()).setCodec(new CuVSCodec());
+        IndexWriterConfig cuvsIndexWriterConfig = new IndexWriterConfig(new StandardAnalyzer()).setCodec(getCuvsCodec(config));
         cuvsIndexWriterConfig.setMaxBufferedDocs(config.commitFreq);
         cuvsIndexWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 
@@ -123,10 +123,12 @@ public class TestCuVsBench extends LuceneTestCase {
             query(writer.getDirectory(), config, codec instanceof CuVSCodec, metrics, queryResults);
         }
 
-        writeCSV(queryResults, "neighbors.csv");
+        // writeCSV(queryResults, "neighbors.csv");
+        System.out.println("queryResults: " + queryResults);
         String resultsJson = new ObjectMapper().writerWithDefaultPrettyPrinter()
                 .writeValueAsString(Map.of("configuration", config, "metrics", metrics));
-        FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
+        // FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
+        System.out.println(resultsJson);
 
         log.info("\n-----\nOverall metrics: " + metrics + "\nMetrics: \n" + resultsJson + "\n-----");
 
@@ -407,6 +409,16 @@ public class TestCuVsBench extends LuceneTestCase {
             public KnnVectorsFormat getKnnVectorsFormatForField(String field) {
                 KnnVectorsFormat knnFormat = new Lucene99HnswVectorsFormat(config.hnswMaxConn, config.hnswBeamWidth);
                 return new HighDimensionKnnVectorsFormat(knnFormat, config.vectorDimension);
+            }
+        };
+        return knnVectorsCodec;
+    }
+
+    private Lucene101Codec getCuvsCodec(BenchmarkConfiguration config) {
+        Lucene101Codec knnVectorsCodec = new Lucene101Codec(Lucene101Codec.Mode.BEST_SPEED) {
+            @Override
+            public KnnVectorsFormat getKnnVectorsFormatForField(String field) {
+                return new CuVSVectorsFormat(1, 128, 64, CuVSVectorsWriter.MergeStrategy.NON_TRIVIAL_MERGE, CuVSVectorsWriter.IndexType.CAGRA);
             }
         };
         return knnVectorsCodec;
