@@ -68,7 +68,7 @@ public class TestCuVsBench extends LuceneTestCase {
 
     public void testBench() throws Exception {
         String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "4", "article_vector", "1000000", "768",
-                "/home/admin/local/lucene/questions.vec.txt", "300000", "10", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
+                "/home/admin/local/lucene/questions.vec.txt", "300000", "10", "8", "8", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
         };
         BenchmarkConfiguration config = new BenchmarkConfiguration(args);
         Map<String, Object> metrics = new HashMap<String, Object>();
@@ -91,7 +91,6 @@ public class TestCuVsBench extends LuceneTestCase {
         hnswWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 
         // CuVS Writer:
-        Lucene101Codec cuvsCodec = getCuvsCodec(config);
         IndexWriterConfig cuvsIndexWriterConfig = new IndexWriterConfig(new StandardAnalyzer()).setCodec(getCuvsCodec(config));
         cuvsIndexWriterConfig.setMaxBufferedDocs(config.commitFreq);
         cuvsIndexWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
@@ -125,14 +124,13 @@ public class TestCuVsBench extends LuceneTestCase {
             num++;
         }
 
-        // writeCSV(queryResults, "neighbors.csv");
+        //
         log.info("queryResults: " + queryResults);
-//        String resultsJson = new ObjectMapper().writerWithDefaultPrettyPrinter()
-//                .writeValueAsString(Map.of("configuration", config, "metrics", metrics));
-        // FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
-
         log.info("\n-----\nOverall metrics: " + metrics + "\nMetrics: \n" + metrics + "\n-----");
-        fail();
+        String resultsJson = new ObjectMapper().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(Map.of("configuration", config, "metrics", metrics));
+         FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
+        writeCSV(queryResults, "neighbors.csv");
     }
 
     private void parseCSVFile(BenchmarkConfiguration config, List<String> titles, List<float[]> vectorColumn)
@@ -164,7 +162,7 @@ public class TestCuVsBench extends LuceneTestCase {
                     countOfDocuments -= 1;
                 }
                 if (countOfDocuments % 1000 == 0)
-                    // System.out.print(".");
+                    System.out.print(".");
 
                 if (countOfDocuments == config.numDocs + 1)
                     break;

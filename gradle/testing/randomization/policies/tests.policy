@@ -86,6 +86,8 @@ grant {
   permission java.io.FilePermission "${/}-", "read";
   // For temporary files to communicate with cuvs
   permission java.io.FilePermission "${/}tmp${/}-", "write,delete";
+
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
 };
 
 // Permissions for jacoco code coverage
