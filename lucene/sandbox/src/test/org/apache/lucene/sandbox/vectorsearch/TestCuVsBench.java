@@ -81,7 +81,7 @@ public class TestCuVsBench extends LuceneTestCase {
         List<float[]> vectorColumn = new ArrayList<float[]>();
         long parseStartTime = System.currentTimeMillis();
         parseCSVFile(config, titles, vectorColumn);
-        System.out.println("Time taken for parsing dataset: " + (System.currentTimeMillis() - parseStartTime + " ms"));
+        log.info("Time taken for parsing dataset: " + (System.currentTimeMillis() - parseStartTime + " ms"));
 
         // [2] Benchmarking setup
 
@@ -111,7 +111,7 @@ public class TestCuVsBench extends LuceneTestCase {
             long indexStartTime = System.currentTimeMillis();
             indexDocuments(writer, config, titles, vectorColumn, config.commitFreq);
             long indexTimeTaken = System.currentTimeMillis() - indexStartTime;
-            if (codec instanceof CuVSCodec) {
+            if (codec.knnVectorsFormat() instanceof CuVSVectorsFormat) {
                 metrics.put("cuvs-indexing-time", indexTimeTaken);
             } else {
                 metrics.put("hnsw-indexing-time", indexTimeTaken);
@@ -157,16 +157,16 @@ public class TestCuVsBench extends LuceneTestCase {
                     vectorColumn.add(reduceDimensionVector(parseFloatArrayFromStringArray(csvLine[config.indexOfVector]),
                             config.vectorDimension));
                 } catch (Exception e) {
-                    System.out.print("#");
+                    // System.out.print("#");
+                    log.info("csv error:" + e.getMessage());
                     countOfDocuments -= 1;
                 }
                 if (countOfDocuments % 1000 == 0)
-                    System.out.print(".");
+                    // System.out.print(".");
 
                 if (countOfDocuments == config.numDocs + 1)
                     break;
             }
-            System.out.println();
         }
         if (zipFile != null)
             zipFile.close();
@@ -222,26 +222,26 @@ public class TestCuVsBench extends LuceneTestCase {
         }
 
         void debugPrintArguments() {
-            System.out.println("Dataset file used is: " + datasetFile);
-            System.out.println("Index of vector field is: " + indexOfVector);
-            System.out.println("Name of the vector field is: " + vectorColName);
-            System.out.println("Number of documents to be indexed are: " + numDocs);
-            System.out.println("Number of dimensions are: " + vectorDimension);
-            System.out.println("Query file used is: " + queryFile);
-            System.out.println("Commit frequency (every n documents): " + commitFreq);
-            System.out.println("TopK value is: " + topK);
-            System.out.println("Lucene HNSW threads: " + hnswThreads);
-            System.out.println("cuVS Merge strategy: " + mergeStrategy);
-            System.out.println("Query threads: " + queryThreads);
+            log.info("Dataset file used is: " + datasetFile);
+            log.info("Index of vector field is: " + indexOfVector);
+            log.info("Name of the vector field is: " + vectorColName);
+            log.info("Number of documents to be indexed are: " + numDocs);
+            log.info("Number of dimensions are: " + vectorDimension);
+            log.info("Query file used is: " + queryFile);
+            log.info("Commit frequency (every n documents): " + commitFreq);
+            log.info("TopK value is: " + topK);
+            log.info("Lucene HNSW threads: " + hnswThreads);
+            log.info("cuVS Merge strategy: " + mergeStrategy);
+            log.info("Query threads: " + queryThreads);
 
-            System.out.println("------- algo parameters ------");
-            System.out.println("hnswMaxConn: " + hnswMaxConn);
-            System.out.println("hnswBeamWidth: " + hnswBeamWidth);
-            System.out.println("hnswVisitedLimit: " + hnswVisitedLimit);
-            System.out.println("cagraIntermediateGraphDegree: " + cagraIntermediateGraphDegree);
-            System.out.println("cagraGraphDegree: " + cagraGraphDegree);
-            System.out.println("cagraITopK: " + cagraITopK);
-            System.out.println("cagraSearchWidth: " + cagraSearchWidth);
+            log.info("------- algo parameters ------");
+            log.info("hnswMaxConn: " + hnswMaxConn);
+            log.info("hnswBeamWidth: " + hnswBeamWidth);
+            log.info("hnswVisitedLimit: " + hnswVisitedLimit);
+            log.info("cagraIntermediateGraphDegree: " + cagraIntermediateGraphDegree);
+            log.info("cagraGraphDegree: " + cagraGraphDegree);
+            log.info("cagraITopK: " + cagraITopK);
+            log.info("cagraSearchWidth: " + cagraSearchWidth);
         }
     }
 
