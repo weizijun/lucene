@@ -91,6 +91,7 @@ public class TestCuVsBench extends LuceneTestCase {
         hnswWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 
         // CuVS Writer:
+        Lucene101Codec cuvsCodec = getCuvsCodec(config);
         IndexWriterConfig cuvsIndexWriterConfig = new IndexWriterConfig(new StandardAnalyzer()).setCodec(getCuvsCodec(config));
         cuvsIndexWriterConfig.setMaxBufferedDocs(config.commitFreq);
         cuvsIndexWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
@@ -105,12 +106,12 @@ public class TestCuVsBench extends LuceneTestCase {
 
         for (IndexWriter writer : new IndexWriter[] { cuvsIndexWriter, hnswIndexWriter }) {
             Codec codec = writer.getConfig().getCodec();
-            String codecName = codec.knnVectorsFormat() instanceof CuVSVectorsFormat ? "CuVS" : "HNSW";
+            String codecName = codec.equals(cuvsCodec) ? "CuVS" : "HNSW";
             log.info("----------\nIndexing documents using "+codecName+" ..."); // error for different coloring
             long indexStartTime = System.currentTimeMillis();
             indexDocuments(writer, config, titles, vectorColumn, config.commitFreq);
             long indexTimeTaken = System.currentTimeMillis() - indexStartTime;
-            if (codec.knnVectorsFormat() instanceof CuVSVectorsFormat) {
+            if (codec.equals(cuvsCodec)) {
                 metrics.put("cuvs-indexing-time", indexTimeTaken);
             } else {
                 metrics.put("hnsw-indexing-time", indexTimeTaken);
@@ -119,7 +120,7 @@ public class TestCuVsBench extends LuceneTestCase {
             log.info("Time taken for index building (end to end): " + indexTimeTaken + " ms");
 
             log.info("Querying documents using "+codecName+"..." ); // error for different coloring
-            query(writer.getDirectory(), config, codec.knnVectorsFormat() instanceof CuVSVectorsFormat, metrics, queryResults);
+            query(writer.getDirectory(), config, codec.equals(cuvsCodec), metrics, queryResults);
         }
 
         // writeCSV(queryResults, "neighbors.csv");
