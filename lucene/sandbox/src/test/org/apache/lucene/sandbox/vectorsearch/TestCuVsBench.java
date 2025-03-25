@@ -130,7 +130,7 @@ public class TestCuVsBench extends LuceneTestCase {
         // FileUtils.write(new File("benchmark_results.json"), resultsJson, Charset.forName("UTF-8"));
 
         log.info("\n-----\nOverall metrics: " + metrics + "\nMetrics: \n" + metrics + "\n-----");
-
+        fail();
     }
 
     private void parseCSVFile(BenchmarkConfiguration config, List<String> titles, List<float[]> vectorColumn)
