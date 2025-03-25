@@ -67,7 +67,7 @@ public class TestCuVsBench extends LuceneTestCase {
     private static boolean RESULTS_DEBUGGING = false; // when enabled, titles are indexed and printed after search
 
     public void testBench() throws Exception {
-        String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "25000", "article_vector", "10", "768",
+        String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "4", "article_vector", "25000", "768",
                 "/home/admin/local/lucene/query.txt", "300000", "10", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
         };
         BenchmarkConfiguration config = new BenchmarkConfiguration(args);
