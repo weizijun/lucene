@@ -67,8 +67,8 @@ public class TestCuVsBench extends LuceneTestCase {
     private static boolean RESULTS_DEBUGGING = false; // when enabled, titles are indexed and printed after search
 
     public void testBench() throws Exception {
-        String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "4", "article_vector", "25000", "768",
-                "/home/admin/local/lucene/query.txt", "300000", "10", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
+        String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "4", "article_vector", "1000000", "768",
+                "/home/admin/local/lucene/questions.vec.txt", "300000", "10", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "10", "128", "64", "5", "1"
         };
         BenchmarkConfiguration config = new BenchmarkConfiguration(args);
         Map<String, Object> metrics = new HashMap<String, Object>();
@@ -254,6 +254,8 @@ public class TestCuVsBench extends LuceneTestCase {
         ExecutorService pool = Executors.newFixedThreadPool(threads);
         AtomicInteger docsIndexed = new AtomicInteger(0);
         AtomicBoolean commitBeingCalled = new AtomicBoolean(false);
+        int titleSize = titles.size();
+        int vecSize = vecCol.size();
 
         for (int i = 0; i < config.numDocs - 1; i++) {
             final int index = i;
@@ -261,9 +263,9 @@ public class TestCuVsBench extends LuceneTestCase {
                 Document document = new Document();
                 document.add(new StringField("id", String.valueOf(index), Field.Store.YES));
                 if (RESULTS_DEBUGGING)
-                    document.add(new StringField("title", titles.get(index), Field.Store.YES));
+                    document.add(new StringField("title", titles.get(index % titleSize), Field.Store.YES));
                 document
-                        .add(new KnnFloatVectorField(config.vectorColName, vecCol.get(index), VectorSimilarityFunction.EUCLIDEAN));
+                        .add(new KnnFloatVectorField(config.vectorColName, vecCol.get(index % vecSize), VectorSimilarityFunction.EUCLIDEAN));
                 try {
                     while (commitBeingCalled.get())
                         ; // block until commit is over
