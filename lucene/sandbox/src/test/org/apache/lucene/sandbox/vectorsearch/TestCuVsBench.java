@@ -68,7 +68,7 @@ public class TestCuVsBench extends LuceneTestCase {
 
     public void testBench() throws Exception {
         String[] args = new String[]{"/home/admin/local/lucene/vector_database_wikipedia_articles_embedded.csv", "4", "article_vector", "1000000", "768",
-                "/home/admin/local/lucene/questions.vec.txt", "300000", "100", "32", "32", "TRIVIAL_MERGE", "1", "16", "100", "100", "128", "64", "5", "1"
+                "/home/admin/local/lucene/questions.vec.txt", "300000", "100", "32", "32", "TRIVIAL_MERGE", "32", "16", "100", "100", "128", "64", "5", "1"
         };
         BenchmarkConfiguration config = new BenchmarkConfiguration(args);
         Map<String, Object> metrics = new HashMap<String, Object>();
@@ -105,7 +105,7 @@ public class TestCuVsBench extends LuceneTestCase {
 
 
         int num = 0;
-        for (IndexWriter writer : new IndexWriter[] { cuvsIndexWriter, hnswIndexWriter }) {
+        for (IndexWriter writer : new IndexWriter[] { cuvsIndexWriter }) {
             String codecName = num == 0 ? "CuVS" : "HNSW";
             log.info("----------\nIndexing documents using "+codecName+" ..."); // error for different coloring
             long indexStartTime = System.currentTimeMillis();
